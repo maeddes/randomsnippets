@@ -1,0 +1,6 @@
+
+app_registry:
+   hostname: https://index.docker.io/v1/
+   repository_prefix: "maeddes"
+   username: "maeddes"
+   password: "Stuttgart1893"

@@ -1,0 +1,16 @@
+function copylist                                                                      
+               set -lx file $argv[1]
+               set -lx src $argv[2]
+               set -lx dest $argv[3]
+
+               echo Copy $file contents from $src to $dest
+
+               while read -la line
+                     if echo $line | grep '#'
+                           echo ignored!
+                     else
+                           echo cp $src$line $dest$line
+                           cp $src$line $dest$line
+                     end
+               end < $file
+         end

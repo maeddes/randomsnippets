@@ -1,0 +1,11 @@
+system_domain: 52.143.4.76.nip.io
+services:
+  router:
+    loadBalancerIP:
+    - 52.143.4.76
+kube:
+  service_cluster_ip_range: 10.100.0.0/16
+  pod_cluster_ip_range: 192.16.0.0/16
+features:
+  eirini:
+    enabled: true

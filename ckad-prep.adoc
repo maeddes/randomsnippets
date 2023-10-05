@@ -1,0 +1,315 @@
+# Core Concepts
+
+fully qualified names
+
+label - selector parity
+
+api version
+
+yaml structure
+
+--help
+--dry-run=client
+
+kubectl run redis --image=redis -l tier=db --port=8080
+kubectl expose pod redis --port=6379 --name=redis-service --selector='tier=db'
+kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3 -n dev-ns
+
+# Configuration
+
+```
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ "/bin/sh", "-c", "env" ]
+      env:
+        # Define the environment variable
+        - name: SPECIAL_LEVEL_KEY
+          valueFrom:
+            configMapKeyRef:
+              # The ConfigMap containing the value you want to assign to SPECIAL_LEVEL_KEY
+              name: special-config
+              # Specify the key associated with the value
+              key: special.how
+
+```
+
+
+```yaml
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command:
+    - sleep
+    - "1200"
+    
+spec:
+  containers:
+  - name: simple-webapp
+    image: kodekloud/webapp-color
+    args: ["--color", "green"]
+    
+```
+
+spec:
+  containers:
+  - name: simple-webapp
+    image: kodekloud/webapp-color
+    command: ["--color","green"]
+    
+spec:
+  containers:
+  - env:
+    - name: APP_COLOR
+      value: green
+    image: kodekloud/webapp-color
+    name: webapp-color
+    
+    
+ spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ "/bin/sh", "-c", "env" ]
+      envFrom:
+      - configMapRef:
+          name: special-config```
+ 
+ ```
+ ```
+ 
+ config maps create & env-from !!
+ secrets types
+ 
+ Tips:
+ 
+sudo -i
+redirect into files with ex-number > 1-svc.yml
+alias k=kubectl 
+bash Ctrl+R
+watch command
+use -h
+k create deploy -h
+k expose -h
+k run -h
+k get pods -A --show-labels
+
+## Kubeconfig
+
+1  pwd
+    2  echo $HOME
+    3  cat .kube/config 
+    4  ls
+    5  cat my-kube-config 
+    6  kubectl config
+    7  kubectl config get-contexts
+    8  kubectl config set-context research
+    9  export KUBECONFIG=my-kube-config 
+   10  kubectl config use-context research
+   11  export KUBECONFIG=my-kube-config 
+   12  cp .kube/config .kube/config.bck
+   13  cp my-kube-config .kube/config
+   14  kubectl get nodes
+   15  kubectl get pods
+   16  cp /etc/kubernetes/pki/users/dev-user/dev-user.crt /etc/kubernetes/pki/users/dev-user/developer-user.crt
+   17  kubectl get pods
+   18  cp /etc/kubernetes/pki/users/dev-user/dev-user.crt /etc/kubernetes/pki/users/dev-user/developer-user.crt:
+   19  kubectl get pods
+   20  vi .kube/config (correct path to cert)
+   21  kubectl get pods
+   22  history
+
+
+    9  kubectl get pod -n kube-system
+   10  kubectl get pod kube-apiserver-controlplane -n kube-system -o yaml
+   11  kubectl get roles
+   12  kubectl get roles -A 
+   14  kubectl get roles -A | grep wc -l
+   15  kubectl get roles -A | wc -l
+   16  kubectl describe role kube-proxy -n kube-system
+   18  kubectl describe rolebinding kube-proxy -n kube-system
+   19  kubectl get pods --as dev-user
+   20  kubectl create role -h
+   21  kubectl create role developer --verb=list,create,delete --resource=pods
+   22  kubectl create role-binding
+   23  kubectl create rolebinding -h
+   24  kubectl create rolebinding dev-user-binding --role=developer --user=dev-user
+   25  kubectl get roles
+   26  history
+   27  kubectl get rols
+   28  kubectl get roles
+   29  kubectl edit role developer
+   30  kubectl get pods
+   31  kubectl get pods -n blue
+   32  kubectl describe pod dark-blue-app -n blue
+   33  kubectl edit role developer -n blue
+   34  kubectl describe pod dark-blue-app -n blue
+   35  history
+   41  kubectl create role configurator --verb=list,create,delete --resource=deployments -n blue
+   42  history
+   43  kubectl create rolebinding dev-user-deploy-binding --role=configurator --user=dev-user -n blue
+ create role and binding
+ ---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: blue
+  name: deploy-role
+rules:
+- apiGroups: ["apps", "extensions"]
+  resources: ["deployments"]
+  verbs: ["create"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dev-user-deploy-binding
+  namespace: blue
+subjects:
+- kind: User
+  name: dev-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: deploy-role
+  apiGroup: rbac.authorization.k8s.io
+  
+    - --disable-admission-plugins=DefaultStorageClass
+    - --enable-admission-plugins=NodeRestriction,NamespaceAutoProvision
+ps -ef | grep kube-apiserver | grep admission-plugins
+
+Helm
+
+    1  uname -a
+    2  sudo apt-get install helm
+    3  curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+    4  sudo apt-get install apt-transport-https --yes
+    5  echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+    6  sudo apt-get update
+    7  sudo apt-get install helm
+    8  helm
+    9  helm --help
+   10  helm env
+   11  helm version
+   
+     1  helm
+    2  helm search
+    3  helm repo add 
+    4  helm repo add bitnami https://charts.bitnami.com/bitnami
+    5  helm search repo joomla
+    6  helm repo list
+    7  helm install
+    8  helm install drupal
+    9  helm
+   10  helm install -h
+   11  helm install drupal bitnami/drupal
+   12  helm install brave bitnami/drupal
+   13  helm install bravo bitnami/drupal
+   14  helm list
+   15  helm show
+   16  helm package
+   17  helm package list
+   18* helm install
+   19  ls /root
+   20  helm pull bitnami/apache
+   21  ls
+   22  pwd
+   23  untar apache-8.8.6.tgz 
+   24  helm pull --untar bitnami/apache
+   25  ls
+   26  cd apache
+   27  ls
+   28  cat values.yaml
+   29  vi values.yaml 
+   30  cd .
+   31  ..
+   32  cd ..
+   33  helm install mywebapp ./apache-8.8.6.tgz 
+   34  kubectl get all
+   35  helm uninstall mywebapp
+   36  helm install mywebapp ./apache
+   37  kubectl get all
+   38  history 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: logger
+  name: logger
+spec:
+  volumes:
+    - name: log-volume
+      persistentVolumeClaim:
+        claimName: log-claim
+  containers:
+  - image: nginx:alpine
+    name: logger
+    volumeMounts:
+        - mountPath: "/var/www/nginx"
+          name: log-volume
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: log-volume
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/opt/volume/nginx"
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: log-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+      
+
+root@controlplane:~# cat time*
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: time-check
+  name: time-check
+spec:
+  containers:
+  - image: busybox
+    name: time-check
+    command: ['while true; do date; sleep $TIME_FREQ;done']
+    resources: {}
+    volumeMounts:
+      - name: config
+        mountPath: "/opt/time"
+  volumes:
+  - name: config
+    configMap:
+      name: time-config
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+
+apiVersion: v1
+data:
+  TIME_FREQ: "10"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: time-config

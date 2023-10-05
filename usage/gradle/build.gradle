@@ -1,0 +1,179 @@
+buildscript {
+	repositories {
+		maven {
+			name = 'central'
+			url = "https://suedleasing.jfrog.io/artifactory/all"
+			// credentials {
+			// 	username = artifactory_user
+			// 	password = artifactory_password
+			// }
+		}
+	}
+}
+
+plugins {
+	id "net.linguica.maven-settings" version "0.5" apply false
+	id "org.jetbrains.kotlin.jvm" version "${kotlin_version}" apply false
+	id "io.spring.dependency-management" version "1.0.10.RELEASE" apply false
+}
+
+sourceCompatibility = '8'
+
+wrapper {
+	distributionUrl="https://suedleasing.jfrog.io/artifactory/all/org/gradle/gradle/${gradle_version}/gradle-${gradle_version}-bin.zip"
+}
+
+
+// FIXME up-to-date-check fuer npmInstall ist nicht immer up-to-date, wenn er sollte
+
+allprojects {
+	repositories {
+		maven {
+			name = 'central'
+			url = "https://suedleasing.jfrog.io/artifactory/all"
+			credentials {
+				username = artifactory_user
+				password = artifactory_password
+			}
+			metadataSources {
+				mavenPom()
+				artifact()
+			}
+		}
+	}
+}
+
+task makeTmpDir {
+	doLast {
+		mkdir("${rootProject.buildDir}/tmp")
+	}
+}
+
+configure(subprojects.findAll {it.name != 'webleasco-client'}) {
+	// Kotlin settings
+	tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+		kotlinOptions {
+			languageVersion = "${kotlin_language_version}"
+			apiVersion = "${kotlin_language_version}"
+			jvmTarget = "${java_language_version}"
+		}
+	}
+
+	apply plugin: "io.spring.dependency-management"
+	dependencyManagement {
+		dependencies {
+			// man wuerde ja hoffen, das macht das gradle kotlin plugin...
+			dependencySet("org.jetbrains.kotlin:${kotlin_version}") {
+				entry("kotlin-reflect")
+				entry("kotlin-stdlib")
+				entry("kotlin-stdlib-common")
+				entry("kotlin-stdlib-jdk7")
+				entry("kotlin-stdlib-jdk8")
+				entry("kotlin-test-junit5")
+				entry("kotlin-test")
+				entry("kotlin-test-common")
+				entry("kotlin-test-annotations-common")
+				entry("kotlin-test-junit5")
+			}
+		}
+		imports {
+			mavenBom "org.springframework.boot:spring-boot-dependencies:${springboot_version}"
+		}
+	}
+
+	// JUnit 5, work around broken gradle console output
+	tasks.withType(org.gradle.api.tasks.testing.Test) {
+
+		dependsOn(rootProject.tasks.makeTmpDir)
+
+		useJUnitPlatform()
+
+		testLogging {
+			events "started", "failed"
+
+			exceptionFormat = 'full'
+
+			showExceptions = true
+			showCauses = true
+			showStackTraces = true
+
+			maxHeapSize "1024m"
+		}
+
+		systemProperty("java.io.tmpdir", "${rootProject.buildDir}/tmp")
+	}
+
+	plugins.withType(de.suedleasing.webleasco.ChromeDriverPlugin) {
+		chromedriver {
+			availableVersion "80", "${chromedriver_80_version}"
+			availableVersion "83", "${chromedriver_83_version}"
+			availableVersion "84", "${chromedriver_84_version}"
+			availableVersion "85", "${chromedriver_85_version}"
+			availableVersion "86", "${chromedriver_86_version}"
+		}
+	}
+
+	// Repositories for publish
+	plugins.withType(MavenPublishPlugin) {
+		if (version != "unspecified") {
+			publishing {
+				repositories {
+					maven {
+						name = version.endsWith('-SNAPSHOT') ?
+							'webleasco-snapshot' : 'webleasco-release'
+
+						url = version.endsWith('-SNAPSHOT') ?
+							'https://suedleasing.jfrog.io/artifactory/webleasco-snapshot' :
+							'https://suedleasing.jfrog.io/artifactory/webleasco-release'
+
+
+						credentials {
+							username = artifactory_user
+							password = artifactory_password
+						}
+					}
+				}
+			}
+
+			project.tasks["publish"].dependsOn project.tasks["check"]
+
+			if (acceptance_tests_before_publish=="true") {
+				project.tasks["publish"].dependsOn ":webleasco-acceptance-test:check"
+				project.tasks["publish"].dependsOn ":webleasco-integration-test:check"
+			}
+
+		} else {
+			gradle.taskGraph.whenReady { taskGraph ->
+				if (taskGraph.hasTask(project.tasks['publish'])) {
+					throw new GradleException(
+						"Publish requested for $project but no version was specified (specify with 'gradlew publish -Pversion=x.y.z')"
+					)
+				}
+			}
+		}
+	}
+
+	// restore some sanity to build output (which, since Gradle 5.0, doesn't even print uploads in default mode)
+	tasks.withType(PublishToMavenRepository) {
+		doLast {
+			publication.artifacts.each { artifact ->
+				def targetUrl = "${repository.url}/${publication.groupId.replace('.', '/')}/${publication.artifactId}/${project.version}/${publication.artifactId}-${project.version}"
+				if (artifact.classifier!=null) {
+					targetUrl += "-${artifact.classifier}"
+				}
+				targetUrl += ".${artifact.extension}"
+				logger.warn("Uploaded ${targetUrl}")
+			}
+		}
+	}
+}
+
+configure(subprojects.findAll {it.name.endsWith('-test') }) {
+	tasks.withType(org.gradle.api.tasks.testing.Test) {
+		testLogging {
+			showStandardStreams = true
+		}
+		systemProperty("cucumber.reporting.screenshots", System.getProperty("cucumber.reporting.screenshots", "ON_FAILURE"))
+		systemProperty("screenshots.dir", System.getProperty("screenshots.dir", "./build/test-results/test/screenshots"))
+	}
+}

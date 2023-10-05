@@ -1,0 +1,16 @@
+function difflist                                                                                         
+                                       set -lx file $argv[1]
+                                       set -lx src $argv[2]
+                                       set -lx dest $argv[3]
+
+                                       echo Compare $file contents from $src to $dest
+
+                                       while read -la line
+                                             if echo $line | grep '#'
+                                                   echo ignored!
+                                             else
+                                                   echo diff $src$line $dest$line
+                                                   diff $src$line $dest$line
+                                             end
+                                       end < $file
+                                 end

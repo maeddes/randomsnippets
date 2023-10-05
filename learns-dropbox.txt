@@ -1,0 +1,269 @@
+maven settings.xml debug pickup azure devops
+
+maven -X
+...
+[DEBUG] Reading global settings from /usr/share/apache-maven-3.6.3/conf/settings.xml
+[DEBUG] Reading user settings from /home/vsts/.m2/settings.xml
+
+maven caching
+
+https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops
+
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
+
+steps:
+- task: Cache@2
+  inputs:
+    key: 'maven | "$(Agent.OS)" | **/pom.xml'
+    restoreKeys: |
+      maven | "$(Agent.OS)"
+      maven
+    path: $(MAVEN_CACHE_FOLDER)
+  displayName: Cache Maven local repo
+
+- script: mvn install -B -e
+
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m $(MAVEN_OPTS)'
+    
+    - task: Cache@2
+      displayName: Maven Repository Cache
+      condition: eq('A', 'A')
+      inputs:
+        key: 'maven | "$(Agent.OS)" | **/pom.xml'
+        restoreKeys: |
+          maven | "$(Agent.OS)"
+          maven
+        path: $HOME/.m2/repository
+
+    - task: AzureCLI@2
+      displayName: 'Build Maven CLI'
+      condition: eq('A', 'A')
+      inputs:
+        azureSubscription: 'AzureRMwithPowerSP'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -x
+          mvn -B -e -X -Dmaven.repo.local=$HOME/.m2/repository -Dmaven.test.skip=true package
+          
+          
+CNB:
+/layers/paketo-buildpacks_maven/cache/repository
+/home/cnb/.m2/repository
+
+mvn -B -e -X -Dmaven.repo.local=/home/vsts/work/1/.m2/repository -Dmaven.test.skip=true package
+
+Working:
+mkdir -p mkdir maven/metadata && mkdir -p maven/secret
+echo "maven" > maven/metadata/kind
+cp -p $HOME/.m2/settings.xml maven/secret/settings.xml
+tree maven 
+cat maven/secret/settings.xml
+export BP_JVM_VERSION=8
+export BP_MAVEN_BUILD_ARGUMENTS="clean install -Dassertj.skip=true -Dmaven.test.skip=true"
+export BP_MAVEN_BUILT_ARTIFACT=/yyy-app/target/yyy-app-0.8.15-SNAPSHOT.jar
+./pack build xxx/yyy -p . --builder gcr.io/paketo-buildpacks/builder:base --env "BP_MAVEN_BUILT_ARTIFACT" --env "BP_JVM_VERSION" --env "BP_MAVEN_BUILD_ARGUMENTS" --volume $PWD/maven:/bindings/maven -v
+
+
+Test:
+export BP_MAVEN_BUILD_ARGUMENTS="clean install -Dassertj.skip=true -Dmaven.test.skip=true -Dmaven.repo.local=/platform/.m2/repository"
+
+pack build slonline/kalkulation -p . --builder gcr.io/paketo-buildpacks/builder:base --env BP_MAVEN_BUILD_ARGUMENTS --env BP_JVM_VERSION --env BP_MAVEN_BUILT_ARTIFACT -v --volume $PWD/maven:/bindings/maven --volume ~/.m2:/.m2
+
+Fails:
+Failed to write tracking file /platform/.m2/repository/org/assertj/assertj-core/resolver-status.properties
+[builder] java.io.FileNotFoundException: /platform/.m2/repository/org/assertj/assertj-core/resolver-status.properties (Read-only file system)
+
+---
+
+OBS Zoom
+
+https://obsproject.com/
+
+https://obsproject.com/wiki/OBS-Studio-Quickstart
+
+https://support.shinywhitebox.com/hc/en-us/articles/204161459-Installing-iShowU-Audio-Capture
+
+https://obsproject.com/forum/resources/obs-virtualcam.949/
+https://streamshark.io/blog/using-obs-as-a-virtual-webcam-on-windows-and-macos/
+
+< 5.0.4 no virtual camera support
+
+https://obsproject.com/forum/threads/using-obs-to-stream-to-zoom-zoom-us.105410/
+
+---
+
+    - script: |
+        set -x
+        pwd
+        ls -altr
+        echo Pipeline.Workspace $(Pipeline.Workspace)
+        echo Agent.HomeDirectory $(Agent.HomeDirectory)
+        echo Build.ArtifactStagingDirectory $(Build.ArtifactStagingDirectory)
+        echo Build.Repository.LocalPath $(Build.Repository.LocalPath)
+        echo System.DefaultWorkingDirectory $(System.DefaultWorkingDirectory)
+        echo user.home $(user.home)
+        echo HOME $HOME
+        ls $(Pipeline.Workspace)/.m2/
+        cat /home/vsts/work/_temp/settings.xml
+        cat /home/vsts/.m2/settings.xml
+        ls -altr /home/vsts/work/_temp  
+        ls -altr /home/vsts/work/1/ 
+        ls -altr /home/vsts/work/
+        git config --list  
+        ls -altr /home/vsts   
+        ls -altr /home/vsts/.m2/   
+        echo hallo
+      displayName: 'Show env'
+      condition: always()
+      
+---
+
+github - hugo
+
+cleanup git repo for page:
+*[master][~/git/wip/maeddes.github.io]$ git rm -r . -f
+[master][~/git/wip/maeddes.github.io]$ git commit -m "cleanup"
+[master][~/git/wip/maeddes.github.io]$ git push origin master
+
+Create new dir - blog
+
+[~/git/wip]$ hugo new site blog
+Congratulations! Your new Hugo site is created in /Users/matthiashaeussler/git/wip/blog.
+
+[~/git/wip]$ cd blog
+[~/git/wip/blog]$ git init
+Initialized empty Git repository in /Users/matthiashaeussler/git/wip/blog/.git/
+
+*[master][~/git/wip/blog]$ git submodule add -b master https://github.com/maeddes/maeddes.github.io.git public
+Cloning into '/Users/matthiashaeussler/git/wip/blog/public'...
+
+*[master][~/git/wip/blog]$ git submodule add --depth 1 https://github.com/reuixiy/hugo-theme-meme.git themes/meme
+
+*[master][~/git/wip/blog]$ hugo new "posts/hello-world.md"
+/Users/matthiashaeussler/git/wip/blog/content/posts/hello-world.md created
+
+*[master][~/git/wip/blog]$ cat content/posts/hello-world.md
+---
+title: "Hello World"
+date: 2020-06-28T10:11:28+02:00
+draft: true
+---
+
+*[master][~/git/wip/blog]$ sed -i '' 's/true/false/g'  content/posts/hello-world.md
+
+*[master][~/git/wip/blog]$ git submodule add --depth 1 https://github.com/reuixiy/hugo-theme-meme.git themes/meme
+Cloning into '/Users/matthiashaeussler/git/wip/blog/themes/meme'...
+
+*[master][~/git/wip/blog]$ rm config.toml && cp themes/meme/config-examples/en/config.toml config.toml
+
+*[master][~/git/wip/blog]$ git submodule
+ 846f6e4fac007bde2a826d99747dd15dd6630be2 public (heads/master)
+ 8ebbfa81a5a517038b24e20768b8db2dda812649 themes/meme (heads/master)
+ 
+*[master][~/git/wip/blog]$ git add .
+*[master][~/git/wip/blog]$ git commit -m "first content"
+
+[master][~/git/wip/blog]$ hugo
+
+                   | EN
+-------------------+-----
+  Pages            | 10
+  Paginator pages  |  0
+  Non-page files   |  0
+  Static files     | 10
+  Processed images |  0
+  Aliases          |  1
+  Sitemaps         |  1
+  Cleaned          |  0
+
+Total in 134 ms
+
+[master][~/git/wip/blog]$ cd public
+*[master][~/git/wip/blog/public]$ git add .
+*[master][~/git/wip/blog/public]$ git commit -m "First page"
+[master f0337a9] First page
+..
+
+[master][~/git/wip/blog/public]$ git push origin master
+Enumerating objects: 32, done.
+..
+To https://github.com/maeddes/maeddes.github.io.git
+   3fc9b88..f0337a9  master -> master
+
+https://gohugo.io/hosting-and-deployment/hosting-on-github/
+https://github.com/gohugoio/HugoBasicExample
+
+---
+
+macOS Java
+
+/usr/libexec/java_home -V
+
+brew install/upgrade java
+
+sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+
+brew install java11
+
+sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+
+$ /usr/libexec/java_home -V
+Matching Java Virtual Machines (3):
+    14.0.1, x86_64:	"OpenJDK 14.0.1"	/Library/Java/JavaVirtualMachines/openjdk.jdk/Contents/Home
+    11.0.7, x86_64:	"OpenJDK 11.0.7"	/Library/Java/JavaVirtualMachines/openjdk-11.jdk/Contents/Home
+    1.8.0_192, x86_64:	"Java SE 8"	/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home
+
+[~/git/wip/simplecode]$ export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
+[~/git/wip/simplecode]$ java -version
+java version "1.8.0_192"
+Java(TM) SE Runtime Environment (build 1.8.0_192-b12)
+Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
+[~/git/wip/simplecode]$ export JAVA_HOME=$(/usr/libexec/java_home -v 11)
+[~/git/wip/simplecode]$ java -version
+openjdk version "11.0.7" 2020-04-14
+OpenJDK Runtime Environment (build 11.0.7+10)
+OpenJDK 64-Bit Server VM (build 11.0.7+10, mixed mode)
+[~/git/wip/simplecode]$ export JAVA_HOME=$(/usr/libexec/java_home -v 14)
+[~/git/wip/simplecode]$ java -version
+openjdk version "14.0.1" 2020-04-14
+OpenJDK Runtime Environment (build 14.0.1+14)
+OpenJDK 64-Bit Server VM (build 14.0.1+14, mixed mode, sharing)
+
+https://stackoverflow.com/questions/21964709/how-to-set-or-change-the-default-java-jdk-version-on-os-x
+
+---
+
+https://hub.docker.com/_/openjdk
+https://hub.docker.com/r/adoptopenjdk/openjdk11
+https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin#quickstart
+https://stackoverflow.com/questions/19654557/how-to-set-specific-java-version-to-maven
+
+https://spring.io/blog/2020/01/27/creating-docker-images-with-spring-boot-2-3-0-m1
+
+https://stackoverflow.com/questions/79764/wildcard-subdomains
+
+https://stackoverflow.com/questions/4421633/who-is-listening-on-a-given-tcp-port-on-mac-os-x
+
+---
+
+https://xplus3.net/2020/06/09/mutagen-caching-docker/
+
+*[master][~/git/wip/suedleasing/deployconfig/charts]$ ls ~/Library/Containers/com.docker.docker/Data/
+backend-for-guest.sock=  docker.sock=             memlogdq.sock=           vpnkit.diag.sock=
+backend.sock=            filesystem-event.sock=   mutagen.sock=            vpnkit.eth.sock=
+default.profraw          filesystem-export.sock=  osxfs.sock=              vpnkit.pcap.sock=
+diagnosticd.sock=        filesystem-volume.sock=  task.lock                vpnkit.port.sock=
+docker-api.sock=         gui-api.sock=            tasks/
+docker-cli.sock=         lifecycle-server.sock=   vms/
+
+---
+
+
+
+

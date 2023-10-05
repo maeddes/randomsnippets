@@ -1,0 +1,15 @@
+curl -L https://istio.io/downloadIstio | sh -\n
+cd istio-1.6.1
+export PATH=$PWD/bin:$PATH
+istioctl install --set profile=default
+
+10227* istioctl install --set profile=default
+10228* kubectl apply --filename https://github.com/knative/serving/releases/download/v0.15.0/serving-crds.yaml
+10229* kubectl apply --filename https://github.com/knative/serving/releases/download/v0.15.0/serving-core.yaml
+10230* kubectl apply --filename https://github.com/knative/net-istio/releases/download/v0.15.0/release.yaml
+10231* kubectl --namespace istio-system get service istio-ingressgateway
+10232* kubectl apply --filename https://github.com/knative/serving/releases/download/v0.15.0/serving-default-domain.yaml
+
+follow rest here:
+
+https://knative.dev/docs/install/any-kubernetes-cluster/

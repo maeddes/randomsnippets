@@ -1,0 +1,11 @@
+10110  kn service create kn-demo --image=maeddes/simpleweb:v0.1
+10111  curl http://kn-demo.default.40.114.191.116.xip.io/hello
+10112* kubectl get all --all-namespaces
+10113* watch kubectl get ksvc,revision,deploy,rs,po,svc
+10115  kn service update kn-demo --concurrency-limit 1
+10116  for i in {1..100}; do curl http://kn-demo.default.40.114.191.116.xip.io/hello &; done
+10117* while true; do curl http://kn-demo.default.40.114.191.116.xip.io/hello; sleep 1; echo; done
+10118  curl http://kn-demo.default.40.114.191.116.xip.io/fail
+10119  kn service update kn-demo --image=maeddes/simpleweb:v0.2
+10120  kn service update kn-demo --traffic @latest=25 --traffic kn-demo-yrylv-2=75
+10121  kn service update kn-demo --traffic @latest=75 --traffic kn-demo-yrylv-2=25

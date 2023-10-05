@@ -1,1 +1,1 @@
-# randomsnippets
+# random-snippets

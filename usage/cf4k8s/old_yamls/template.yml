@@ -1,0 +1,24 @@
+#@data/values
+---
+istio_static_ip: "51.136.79.84"
+system_domain: "51.136.79.84.xip.io"
+app_domains:
+#@overlay/append
+- "apps.51.136.79.84.xip.io"
+cf_admin_password: dbqe8p1ja2iqv6s9kul9
+
+blobstore:
+        8A==
+        -----END CERTIFICATE-----
+        
+  login_secret: 13tqf2gqwouvckz1kan4
+
+load_balancer:
+  enable: true
+  static_ip: "51.136.79.84"
+
+app_registry:
+  hostname: https://index.docker.io/v1/
+  repository_prefix: "maeddes"
+  username: "maeddes"
+  password: "Stuttgart1893"

@@ -1,0 +1,65 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - git:
+      commitTitle: images.yml updated by CI...
+      sha: b420ff1c0b35db8fed2ad48f43bcba9f305c4307
+    path: .
+  path: config/capi/_ytt_lib/capi-k8s-release
+- contents:
+  - git:
+      commitTitle: Update routecontroller image digest to sha256:ed4b3e351a31313ebf974439e4fb43210281a02f0a9125cb8ea880c572385b5f
+      sha: 4153bbdbaf3e8d3d681a84a112f3c9cc10129ff3
+    path: .
+  path: config/networking/_ytt_lib/cf-k8s-networking
+- contents:
+  - githubRelease:
+      url: https://api.github.com/repos/cloudfoundry/cf-k8s-logging/releases/26725288
+    path: .
+  path: config/logging/_ytt_lib/cf-k8s-logging
+- contents:
+  - git:
+      commitTitle: update pipeline to tag image and publish draft release...
+      sha: 30f654752198272ea8dfeddd78e73fbe1004875e
+    path: .
+  path: config/metrics/_ytt_lib/metric-proxy
+- contents:
+  - git:
+      commitTitle: Update UAA image reference in k8s deployment template to 74.23.0
+      sha: 6efde609a06c53d87d8c68443906f32221705b14
+    path: .
+  path: config/uaa/_ytt_lib/uaa
+- contents:
+  - manual: {}
+    path: eirini
+  path: config/eirini/_ytt_lib
+- contents:
+  - manual: {}
+    path: kpack
+  path: config/kpack/_ytt_lib
+- contents:
+  - manual: {}
+    path: minio
+  path: config/minio/_ytt_lib
+- contents:
+  - manual: {}
+    path: postgres
+  path: config/postgres/_ytt_lib
+- contents:
+  - git:
+      commitTitle: '[stable/minio] Support imagePullSecrets (#22812)...'
+      sha: 921eb8a969fb9d7b7b7d13904f740c76748ec2c9
+    path: .
+  path: build/minio/_vendir
+- contents:
+  - githubRelease:
+      url: https://api.github.com/repos/cloudfoundry-incubator/eirini-release/releases/28266990
+    path: .
+  path: build/eirini/_vendir
+- contents:
+  - git:
+      commitTitle: '[bitnami/postgresql] Release 8.10.6 updating components versions...'
+      sha: f9cb0102f1e03d9ee7f09dbb65e9d7cdc25f84fe
+    path: .
+  path: build/postgres/_vendir
+kind: LockConfig

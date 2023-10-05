@@ -1,0 +1,14 @@
+pluginManagement {
+	repositories {
+		maven {
+			name = 'central'
+			url = "https://suedleasing.jfrog.io/artifactory/all"			
+			credentials {
+				username = artifactory_user
+				password = artifactory_password
+			}
+		}
+	}
+}
+
+include 'webleasco-icsnet', 'webleasco-dbschema', 'webleasco-server', 'webleasco-client' //, 'webleasco-integration-test' //, 'webleasco-acceptance-test'
